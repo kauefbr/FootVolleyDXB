@@ -1,0 +1,24 @@
+# Ambiente virtual
+venv/
+
+# Cache do Python
+__pycache__/
+*.pyc
+
+# Variáveis de ambiente (dados sensíveis)
+.env
+
+# Banco de dados local (se usarmos SQLite em algum momento de teste)
+*.sqlite3
+
+# Uploads de usuário
+backend/media/*
+!backend/media/.gitkeep
+
+# Arquivos da IDE
+.vscode/
+.idea/
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
