@@ -23,6 +23,12 @@ class HorarioDisponivel(models.Model):
         unique_together = ("servico", "data", "hora_inicio")
         verbose_name = "Horário Disponível"
         verbose_name_plural = "Horários Disponíveis"
+        # ===== ÍNDICES =====
+        indexes = [
+            models.Index(fields=['servico'], name='idx_horario_servico'),
+            models.Index(fields=['data'], name='idx_horario_data'),
+            models.Index(fields=['servico', 'data'], name='idx_horario_servico_data'),
+        ]
 
     def __str__(self):
         return f"{self.servico.nome} - {self.data} ({self.hora_inicio})"
@@ -54,7 +60,6 @@ class HorarioDisponivel(models.Model):
         return not self.agendamentos.filter(
             status__in=["confirmado", "pendente"]
         ).exists()
-
 
 
 class Agendamento(models.Model):
@@ -91,6 +96,13 @@ class Agendamento(models.Model):
         ordering = ["-criado_em"]
         verbose_name = "Agendamento"
         verbose_name_plural = "Agendamentos"
+        # ===== ÍNDICES =====
+        indexes = [
+            models.Index(fields=['usuario'], name='idx_agendamento_usuario'),
+            models.Index(fields=['status'], name='idx_agendamento_status'),
+            models.Index(fields=['usuario', 'status'], name='idx_agendamento_usuario_status'),
+            models.Index(fields=['horario_disponivel'], name='idx_agendamento_horario'),
+        ]
 
     def __str__(self):
         return f"{self.usuario.username} - {self.horario_disponivel.servico.nome} ({self.status})"
@@ -132,7 +144,6 @@ class Agendamento(models.Model):
         """
         Verifica se este agendamento pode ser cancelado.
         Regra: só pode cancelar se status for "pendente" ou "confirmado".
-        Não pode cancelar agendamentos já "cancelado".
         """
         return self.status in ["pendente", "confirmado"]
 
@@ -150,7 +161,6 @@ class Agendamento(models.Model):
     def hora_completa(self):
         """
         Retorna data + hora formatada: "24/07/2026 20:00"
-        Útil pra exibir no frontend.
         """
         data_formatada = self.horario_disponivel.data.strftime("%d/%m/%Y")
         hora_formatada = self.horario_disponivel.hora_inicio.strftime("%H:%M")
@@ -165,43 +175,6 @@ class Agendamento(models.Model):
     def dias_ate_agendamento(self):
         """
         Retorna quantos dias faltam até o agendamento.
-        Ex: se hoje é 24/07 e agendamento é 26/07, retorna 2.
-        Se agendamento é no passado, retorna negativo.
         """
         diferenca = self.horario_disponivel.data - date.today()
         return diferenca.days
-    
-    class StatusChoices(models.TextChoices):
-        PENDENTE = "pendente", "Pendente"
-        CONFIRMADO = "confirmado", "Confirmado"
-        CANCELADO = "cancelado", "Cancelado"
-
-    usuario = models.ForeignKey(
-        Usuario,
-        on_delete=models.CASCADE,
-        related_name="agendamentos",
-        help_text="Cliente que fez o agendamento"
-    )
-    horario_disponivel = models.ForeignKey(
-        HorarioDisponivel,
-        on_delete=models.CASCADE,
-        related_name="agendamentos",
-        help_text="Horário que foi reservado"
-    )
-    status = models.CharField(
-        max_length=20,
-        choices=StatusChoices.choices,
-        default=StatusChoices.PENDENTE,
-    )
-    criado_em = models.DateTimeField(auto_now_add=True)
-    atualizado_em = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["-criado_em"]
-        verbose_name = "Agendamento"
-        verbose_name_plural = "Agendamentos"
-
-    def __str__(self):
-        return f"{self.usuario.username} - {self.horario_disponivel.servico.nome} ({self.status})"
-
-

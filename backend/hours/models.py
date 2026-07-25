@@ -30,6 +30,12 @@ class RegistroHoras(models.Model):
         ordering = ["-data"]
         verbose_name = "Registro de Horas"
         verbose_name_plural = "Registros de Horas"
+        # ===== ÍNDICES =====
+        indexes = [
+            models.Index(fields=['usuario'], name='idx_registro_usuario'),
+            models.Index(fields=['data'], name='idx_registro_data'),
+            models.Index(fields=['usuario', 'data'], name='idx_registro_usuario_data'),
+        ]
 
     def __str__(self):
         return f"{self.usuario.username} - {self.data} ({self.horas_trabalhadas}h)"

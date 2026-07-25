@@ -44,6 +44,11 @@ class Pagamento(models.Model):
         ordering = ["-criado_em"]
         verbose_name = "Pagamento"
         verbose_name_plural = "Pagamentos"
+        # ===== ÍNDICES =====
+        indexes = [
+            models.Index(fields=['status'], name='idx_pagamento_status'),
+            models.Index(fields=['agendamento'], name='idx_pagamento_agendamento'),
+        ]
 
     def __str__(self):
         return f"Pagamento - {self.agendamento.usuario.username} ({self.status})"
