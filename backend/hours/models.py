@@ -1,7 +1,10 @@
+from datetime import date
 from django.db import models
+from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 
 Usuario = get_user_model()
+
 
 class RegistroHoras(models.Model):
     """
@@ -30,11 +33,16 @@ class RegistroHoras(models.Model):
         ordering = ["-data"]
         verbose_name = "Registro de Horas"
         verbose_name_plural = "Registros de Horas"
-        # ===== ÍNDICES =====
         indexes = [
             models.Index(fields=['usuario'], name='idx_registro_usuario'),
             models.Index(fields=['data'], name='idx_registro_data'),
             models.Index(fields=['usuario', 'data'], name='idx_registro_usuario_data'),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(horas_trabalhadas__gt=0),
+                name='ck_registro_horas_positivas'
+            ),
         ]
 
     def __str__(self):
@@ -44,15 +52,11 @@ class RegistroHoras(models.Model):
         """
         Validações customizadas para RegistroHoras.
         """
-        from datetime import date
-        from django.core.exceptions import ValidationError
         errors = {}
 
-        # Validação 1: horas_trabalhadas deve ser > 0
         if self.horas_trabalhadas is not None and self.horas_trabalhadas <= 0:
             errors['horas_trabalhadas'] = "Horas trabalhadas deve ser maior que 0."
 
-        # Validação 2: data não pode ser no futuro
         if self.data and self.data > date.today():
             errors['data'] = "Não pode registrar horas em datas futuras."
 

@@ -16,6 +16,17 @@ class Servico(models.Model):
 
     class Meta:
         ordering = ["nome"]
+     # ===== CONSTRAINTS SQL =====
+        constraints = [
+        models.CheckConstraint(
+            condition=models.Q(preco__gt=0),
+            name='ck_servico_preco_positivo'
+        ),
+        models.CheckConstraint(
+            condition=models.Q(duracao_minutos__gt=0),
+            name='ck_servico_duracao_positiva'
+        ),
+    ]
 
     def __str__(self):
         return self.nome

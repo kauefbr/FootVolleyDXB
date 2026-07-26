@@ -23,13 +23,17 @@ class HorarioDisponivel(models.Model):
         unique_together = ("servico", "data", "hora_inicio")
         verbose_name = "Horário Disponível"
         verbose_name_plural = "Horários Disponíveis"
-        # ===== ÍNDICES =====
         indexes = [
             models.Index(fields=['servico'], name='idx_horario_servico'),
             models.Index(fields=['data'], name='idx_horario_data'),
             models.Index(fields=['servico', 'data'], name='idx_horario_servico_data'),
         ]
-
+        constraints = [
+        models.CheckConstraint(
+        condition=models.Q(hora_inicio__lt=models.F('hora_fim')),
+        name='ck_horario_inicio_before_fim'
+            ),
+        ]
     def __str__(self):
         return f"{self.servico.nome} - {self.data} ({self.hora_inicio})"
 
@@ -39,12 +43,10 @@ class HorarioDisponivel(models.Model):
         """
         errors = {}
 
-        # Validação 1: hora_inicio deve ser menor que hora_fim
         if self.hora_inicio and self.hora_fim:
             if self.hora_inicio >= self.hora_fim:
                 errors['hora_inicio'] = "Hora de início deve ser antes da hora de término."
 
-        # Validação 2: data não pode ser no passado
         if self.data and self.data < date.today():
             errors['data'] = "Não pode criar horários em datas passadas."
 
@@ -60,7 +62,6 @@ class HorarioDisponivel(models.Model):
         return not self.agendamentos.filter(
             status__in=["confirmado", "pendente"]
         ).exists()
-
 
 class Agendamento(models.Model):
     """

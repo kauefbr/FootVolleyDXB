@@ -1,6 +1,6 @@
 from django.db import models
 from booking.models import Agendamento
-
+from django.core.exceptions import ValidationError
 
 class Pagamento(models.Model):
     """
@@ -46,10 +46,16 @@ class Pagamento(models.Model):
         verbose_name_plural = "Pagamentos"
         # ===== ÍNDICES =====
         indexes = [
-            models.Index(fields=['status'], name='idx_pagamento_status'),
-            models.Index(fields=['agendamento'], name='idx_pagamento_agendamento'),
+        models.Index(fields=['status'], name='idx_pagamento_status'),
+        models.Index(fields=['agendamento'], name='idx_pagamento_agendamento'),
         ]
-
+        # ===== CONSTRAINTS SQL =====
+        constraints = [
+            models.CheckConstraint(
+            condition=models.Q(valor__gt=0),
+            name='ck_pagamento_valor_positivo'
+            ),
+        ]
     def __str__(self):
         return f"Pagamento - {self.agendamento.usuario.username} ({self.status})"
 
@@ -57,7 +63,6 @@ class Pagamento(models.Model):
         """
         Validações customizadas para Pagamento.
         """
-        from django.core.exceptions import ValidationError
         errors = {}
 
         # Validação 1: valor deve ser > 0
