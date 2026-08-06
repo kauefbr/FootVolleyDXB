@@ -79,12 +79,17 @@ WSGI_APPLICATION = 'site_institucional.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Carrega as variáveis do arquivo .env
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'site_institucional_db',
         'USER': 'postgres',
-        'PASSWORD': '5991',
+        'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': 'localhost',
         'PORT': '5432',
     }
